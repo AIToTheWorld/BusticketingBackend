@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Ticket Validator</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        /* Basic page styling */
+        
+        body {
+    font-family: 'Roboto', sans-serif; /* Switch to Roboto, a cleaner typeface */
+    background-color: #f7f9fc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden; /* In case of animations spilling over */
+}
+
+#qr-reader, #qr-reader-results {
+    transition: all 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* QR Reader styling */
+#qr-reader {
+    background-color: #ffffff;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+/* Results styling */
+#qr-reader-results {
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+}
+
+#qr-reader-results div {
+    margin-bottom: 1rem; /* Consistent spacing */
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+
+strong {
+    color: #2c3e50; /* Subtle dark color */
+    font-weight: 500; /* Not too bold, not too light */
+}
+
+        @keyframes fireworks {
+    0% { transform: scale(0.05); opacity: 1; }
+    50% { transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1); }
+}
+
+.success-validation {
+    background: rgba(0, 200, 0, 0.2);
+    border: 5px solid green;
+    animation: fireworks 1.5s forwards;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    color: green;
+    font-weight: bold;
+    z-index: 9999;
+}
+@keyframes doom {
+    0% { transform: scale(0.05); opacity: 1; }
+    50% { transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1); }
+}
+
+
+.rejection-doom {
+    background: rgba(200, 0, 0, 0.2);
+    border: 5px solid red;
+    animation: doom 1.5s forwards;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    color: red;
+    font-weight: bold;
+    z-index: 9999;
+}
+
+    </style>
+</head>
+<body>
+    <div id="qr-reader"></div>
+    <div id="qr-reader-results"></div>
+
+    <script src="/html5-qrcode.min.js"></script>
+    <script>
+    function docReady(fn) {
+        // see if DOM is already available
+        if (document.readyState === "complete"
+            || document.readyState === "interactive") {
+            // call on next available tick
+            setTimeout(fn, 1);
+        } else {
+            document.addEventListener("DOMContentLoaded", fn);
+        }
+    }
+
+    docReady(function () {
+    var resultContainer = document.getElementById('qr-reader-results');
+    var lastResult, countResults = 0;
+
+    function onScanSuccess(decodedText, decodedResult) {
+    if (decodedText !== lastResult) {
+        ++countResults;
+        lastResult = decodedText;
+
+        const parsedData = JSON.parse(decodedText);
+        fetch('/validate-ticket', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(parsedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+    // Handle error scenario
+    resultContainer.innerHTML = `<div class="error">${data.error}</div>`;
+
+    // HERE'S THE TRAGIC PART! Show our rejection drama!
+    let doom = document.createElement('div');
+    doom.classList.add('rejection-doom');
+    doom.innerHTML = "Ticket Rejected!";
+    document.body.appendChild(doom);
+    
+    // Let the drama be short-lived, lest it consumes the viewer's soul.
+    setTimeout(() => {
+        document.body.removeChild(doom);
+    }, 1000);
+} else {
+    // Display ticket details
+    resultContainer.innerHTML = `
+        <div>
+            <strong>Ticket ID:</strong> ${data.ticketDetails.ticket_id}
+        </div>
+        <div>
+            <strong>Booking Time:</strong> ${data.ticketDetails.booking_time}
+        </div>
+        <div>
+            <strong>Booking Date:</strong> ${data.ticketDetails.booking_date}
+        </div>
+        <div>
+            <strong>Created At:</strong> ${data.ticketDetails.created_at}
+        </div>
+    `;
+    
+    // HERE'S THE MAGIC! Show our celebratory animation!
+    let celebration = document.createElement('div');
+    celebration.classList.add('success-validation');
+    celebration.innerHTML = "Ticket Validated!";
+    document.body.appendChild(celebration);
+    
+    // Let the celebration be momentary, and not forever. 
+    setTimeout(() => {
+        document.body.removeChild(celebration);
+    }, 1000);
+}
+
+            
+        });
+    }
+}
+
+    var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+});
+
+</script>
+</head>
+</html>

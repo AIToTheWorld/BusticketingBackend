@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard: All Tickets</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 50px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+            font-size: 2.5em;
+            background: -webkit-linear-gradient(#555, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding-bottom: 5px;
+            
+        }
+
+        .ticket-card {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            align-items: center;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .ticket-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .ticket-label {
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 15px;
+            background-color: #ffe5e5;
+            border: 1px solid red;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.1);
+        }
+        .button {
+    background-color: #555;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1em;
+    text-decoration: none;  /* Since we're going to transform this into an anchor pretending to be a button */
+    display: inline-block;  /* To allow it to be used as a link */
+    position: absolute;     /* Absolute positioning */
+    top: 20px;              /* Offset from the top */
+    left: 20px;             /* Offset from the left */
+    z-index: 10;            /* Ensure it's above other items */
+}
+
+.button:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+    </style>
+</head>
+<body>
+    <a href="index.html" class="button">View QR</a>
+
+    <div class="ticket-card-header">
+        <span class="ticket-label">Ticket ID</span>
+        <span class="ticket-label">Booking Time</span>
+        <span class="ticket-label">Booking Date</span>
+        <span class="ticket-label">Created At</span>
+    </div>
+    <div id="ticketContainer"></div>
+
+    <script>
+        async function fetchTickets() {
+            const response = await fetch('/api/get-all-tickets');
+            return response.json();
+        }
+
+        function loadTickets() {
+            fetchTickets().then(tickets => {
+                const ticketContainer = document.getElementById('ticketContainer');
+                
+                tickets.forEach(ticket => {
+                    const ticketCard = document.createElement('div');
+                    ticketCard.classList.add('ticket-card');
+
+                    ticketCard.innerHTML = `
+                        <span>${ticket.ticket_id}</span>
+                        <span>${ticket.booking_time}</span>
+                        <span>${ticket.booking_date}</span>
+                        <span>${ticket.created_at}</span>
+                    `;
+                    ticketContainer.appendChild(ticketCard);
+                });
+            }).catch(error => {
+                const ticketContainer = document.getElementById('ticketContainer');
+                ticketContainer.innerHTML = `<div class="error">Error fetching tickets: ${error}</div>`;
+            });
+        }
+        loadTickets();
+    </script>
+</body>
+</html>

@@ -105,11 +105,38 @@ strong {
     color: red;
     font-weight: bold;
     z-index: 9999;
+    
+}   
+.button {
+    background-color: #555;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1em;
+    text-decoration: none;  /* Since we're going to transform this into an anchor pretending to be a button */
+    display: inline-block;  /* To allow it to be used as a link */
+    position: absolute;     /* Absolute positioning */
+    top: 20px;              /* Offset from the top */
+    left: 20px;             /* Offset from the left */
+    z-index: 10;            /* Ensure it's above other items */
+}
+
+.button:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+}
+
+.button:active {
+    transform: translateY(0);
 }
 
     </style>
 </head>
 <body>
+    <a href="dashboard.html" class="button">View Dashboard</a>
     <div id="qr-reader"></div>
     <div id="qr-reader-results"></div>
 

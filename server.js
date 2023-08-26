@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 const supabaseUrl = "https://kwyezimolkwsbblpvdgz.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3eWV6aW1vbGt3c2JibHB2ZGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODk1Njc1MjQsImV4cCI6MjAwNTE0MzUyNH0.8ca5kXW4qrDkjC_8mLFy36eRgyZcqozI-pVx3W4GUpE";
-
+ 
 const supabase = createClient(supabaseUrl, supabaseKey);
 app.use(bodyParser.json());
 
@@ -45,7 +45,25 @@ app.post('/validate-ticket', async (req, res) => {
     }
 });
 
+app.get('/api/get-all-tickets', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('tickets').select('*');
+        
+        if (error) {
+            console.error("Error querying Supabase:", error.message);
+            return res.status(500).send({ error: 'Database error' });
+        }
 
+        if (!data || data.length === 0) {
+            return res.status(404).send({ error: 'No tickets found' });
+        }
+
+        res.send(data);
+    } catch (err) {
+        console.error("Unexpected error in /api/get-all-tickets:", err.message);
+        return res.status(500).send({ error: 'Unexpected server error' });
+    }
+});
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });

@@ -23,7 +23,6 @@ app.post('/validate-ticket', async (req, res) => {
         console.log('Received body:', req.body);
         if (!tripId) return res.status(400).send({ error: 'No trip ID provided' });
         
-        
         const { data, error } = await supabase
             .from('tickets')
             .select('*')
@@ -34,9 +33,26 @@ app.post('/validate-ticket', async (req, res) => {
             return res.status(500).send({ error: 'Database error' });
         }
         if (!data || data.length === 0) return res.status(404).send({ error: 'Ticket not found' });
+
         const ticketDetails = data[0];  // Assuming there's only one match for a ticket ID
+
+        if (ticketDetails.used) {
+            return res.status(400).send({ error: 'Ticket already used' });
+        }
+
+        // Mark ticket as used
+        const { error: updateError } = await supabase
+            .from('tickets')
+            .update({ used: true })
+            .eq('trip_id', tripId);
+        
+        if (updateError) {
+            console.error("Error updating Supabase:", updateError.message);
+            return res.status(500).send({ error: 'Database error' });
+        }
+
         res.send({
-            message: 'Ticket is valid!',
+            message: 'Ticket is valid and marked as used!',
             ticketDetails
         });
     } catch (err) {
@@ -44,6 +60,7 @@ app.post('/validate-ticket', async (req, res) => {
         return res.status(500).send({ error: 'Unexpected server error' });
     }
 });
+
 
 app.get('/api/get-all-tickets', async (req, res) => {
     try {
